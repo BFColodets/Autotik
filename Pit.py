@@ -302,6 +302,26 @@ class Pit:
     def next(self):
         self.click_button('Продoлжить')
 
+    def book(self):
+        answers = { # None - неизвестен ответ
+            "жизненые силы вокруг себя и направить их поток в свое тело": None
+        } 
+        question_part1 = "Книгу целиком уже не спасти, но одна из страниц уцелела. Кусок текста на ней гласит: «..."
+        question_part2 = "...»."
+
+        messages = self.get_messages_text()
+
+        for message in messages:
+            if question_part1 in message and question_part2 in message:
+                question = message.split(question_part1).split(question_part2)[0]
+                if question in answers:
+                    if answers[question] is not None:
+                        self.click_button(answers[question])
+                        break
+                self.click_button("Оставить книгу")
+                break
+                
+
     def get_stage(self):
         """Определяет текущую стадию игры и возвращает соответствующий метод"""
         stage_to_method = {
@@ -333,7 +353,8 @@ class Pit:
             "Вставить камень судьбы": self.nahui,
             "Открыть силой": self.nahui,
             "Улучшить броню": self.up,
-            "Продoлжить": self.next
+            "Продoлжить": self.next,
+            "Оставить книгу": self.book
         }
 
         button_triggers = list(stage_to_method)
