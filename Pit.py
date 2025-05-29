@@ -2,7 +2,7 @@ from playwright.sync_api import Page, TimeoutError
 from datetime import datetime, timedelta
 from bs4 import BeautifulSoup
 import random
-
+import orjson, re
 
 class Pit:
     def __init__(self, page: Page):
@@ -13,6 +13,13 @@ class Pit:
         self.last_stage = None
         self.eating_time = datetime.now() - timedelta(hours=4)
         self.is_healing_spring = False
+
+        self.load_answers()x
+
+    def load_answers(self):
+        with open('book_answers.json', 'r', encoding='utf-8') as f:
+                riddles = f.read()
+                self.book_riddles = orjson.loads(f)
 
     def click_button(self, title, timeout: float = 5000) -> None:
         try:
@@ -303,23 +310,21 @@ class Pit:
         self.click_button('Продoлжить')
 
     def book(self):
-        answers = { # None - неизвестен ответ
-            "жизненые силы вокруг себя и направить их поток в свое тело": None
-        } 
-        question_part1 = "Книгу целиком уже не спасти, но одна из страниц уцелела. Кусок текста на ней гласит: «..."
-        question_part2 = "...»."
+        question_part = "Книгу целиком уже не спасти, но одна из страниц уцелела. Кусок текста на ней гласит"
 
         messages = self.get_messages_text()
 
         for message in messages:
-            if question_part1 in message and question_part2 in message:
-                question = message.split(question_part1).split(question_part2)[0]
-                if question in answers:
-                    if answers[question] is not None:
-                        self.click_button(answers[question])
-                        break
-                self.click_button("Оставить книгу")
-                break
+            if message.startswith(question_part):
+                riddle_match = re.search(r'<<(.*?)>>', message)
+                if riddle_match:
+                    riddle = riddle_match.group(1)
+                    for i, trigger in enumerate(self.book_riddles['triggers']):
+                        if trigger in riddle:
+                            self.click_button(book_riddles['responses'][i])
+                            return
+                    self.click_button("Оставить книгу")
+                    return
                 
 
     def get_stage(self):
